@@ -1,11 +1,12 @@
 from .constants import RED, WHITE, SQUARE_SIZE, GREY, CROWN
 import pygame
 
-#generating coints
+# Represent one checker, including its position, color, king status, and drawing.
 class Piece:
     PADDING = 15
     OUTLINE = 2
-    #initialize each coint
+
+    # Create a checker at the given board square and calculate its screen position.
     def __init__(self, row, col, color):
         self.row = row
         self.col = col
@@ -14,15 +15,17 @@ class Piece:
         self.x = 0
         self.y = 0
         self.calc_pos()
-    #help to stay coin middle of the square
+
+    # Convert the board row and column into the pixel center of this checker.
     def calc_pos(self):
         self.x = SQUARE_SIZE * self.col + SQUARE_SIZE // 2
         self.y = SQUARE_SIZE * self.row + SQUARE_SIZE // 2
-    #turn the coin into a king
+
+    # Mark this checker as a king so it can move in both directions.
     def make_king(self):
         self.king = True
-
-    #draw the actual circle coin
+    
+    # Draw the checker and, for kings, center the crown image on it.
     def draw(self, win):
         radius = SQUARE_SIZE//2 - self.PADDING
         pygame.draw.circle(win, GREY, (self.x, self.y), radius + self.OUTLINE)
@@ -30,10 +33,12 @@ class Piece:
         if self.king:
             win.blit(CROWN, (self.x - CROWN.get_width()//2, self.y - CROWN.get_height()//2))
 
+    # Update the board coordinates and recalculate the screen position.
     def move(self, row, col):
         self.row = row
         self.col = col
         self.calc_pos()
-    #return the color of coin object so that it can be easy to debug the code
+
+    # Provide the piece's color as its readable representation.
     def __repr__(self):
         return str(self.color)

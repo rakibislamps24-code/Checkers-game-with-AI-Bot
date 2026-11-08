@@ -1,6 +1,6 @@
 # Assets: https://techwithtim.net/wp-content/uploads/2020/09/assets.zip
 import pygame
-from checker.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED, CROWN
+from checker.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED
 from checker.game import Game
 # from minimax.algorithm import minimax
 
@@ -9,12 +9,14 @@ FPS = 60
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Checkers')
 
+# Convert the mouse's pixel coordinates into the board's row and column.
 def get_row_col_from_mouse(pos):
     x, y = pos
     row = y // SQUARE_SIZE
     col = x // SQUARE_SIZE
     return row, col
 
+# Run the Pygame event loop, process player clicks, and refresh the game display.
 def main():
     run = True
     clock = pygame.time.Clock()
