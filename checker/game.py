@@ -1,6 +1,6 @@
 import pygame
 from .constants import RED, WHITE, BLUE, SQUARE_SIZE
-from checkers.board import Board
+from checker.board import Board
 
 # Coordinate the current turn, player selections, legal moves, and board display.
 class Game:
