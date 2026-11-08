@@ -1,156 +1,76 @@
 import pygame
+from .constants import RED, WHITE, BLUE, SQUARE_SIZE
+from checkers.board import Board
 
-from .board import Board
-from .constants import COLS, RED, ROWS, WHITE
-
-
+# Coordinate the current turn, player selections, legal moves, and board display.
 class Game:
+    # Set up a new game and associate it with the Pygame window.
     def __init__(self, win):
+        self._init()
         self.win = win
-        self.board = Board()
+    
+    # Redraw the board and legal-move indicators, then refresh the window.
+    def update(self):
+        self.board.draw(self.win)
+        self.draw_valid_moves(self.valid_moves)
+        pygame.display.update()
+
+    # Reset the board, current player, selection, and cached legal moves.
+    def _init(self):
         self.selected = None
+        self.board = Board()
         self.turn = RED
         self.valid_moves = {}
 
-    def update(self):
-        self.board.draw(self.win)
-        pygame.display.update()
-
+    # Return the winner reported by the board, or None if play can continue.
     def winner(self):
-        if self.board.red_left <= 0:
-            return WHITE
-        if self.board.white_left <= 0:
-            return RED
-        if not self._has_moves(self.turn):
-            return WHITE if self.turn == RED else RED
-        return None
+        return self.board.winner()
 
+    # Start a fresh game using the same game window.
+    def reset(self):
+        self._init()
+
+    # Select a piece belonging to the current player or attempt a legal move.
+    # If a selected move fails, allow the clicked square to be selected instead.
     def select(self, row, col):
-        if not (0 <= row < ROWS and 0 <= col < COLS):
-            return False
-
-        if self.selected is not None and (row, col) in self.valid_moves:
-            return self._move(row, col)
-
-        piece = self.board.board[row][col]
+        if self.selected:
+            result = self._move(row, col)
+            if not result:
+                self.selected = None
+                self.select(row, col)
+        
+        piece = self.board.get_piece(row, col)
         if piece != 0 and piece.color == self.turn:
             self.selected = piece
-            self.valid_moves = self.get_valid_moves(piece)
-            return bool(self.valid_moves)
-
-        self.selected = None
-        self.valid_moves = {}
+            self.valid_moves = self.board.get_valid_moves(piece)
+            return True
+            
         return False
 
-    def get_valid_moves(self, piece):
-        captures = self._captures_for(piece)
-        if captures:
-            return captures
-
-        has_capture = any(
-            self._captures_for(other)
-            for row in self.board.board
-            for other in row
-            if other != 0 and other.color == self.turn
-        )
-        if has_capture:
-            return {}
-
-        moves = {}
-        for row_delta, col_delta in self._directions(piece):
-            row, col = piece.row + row_delta, piece.col + col_delta
-            if self._inside_board(row, col) and self.board.board[row][col] == 0:
-                moves[(row, col)] = []
-        return moves
-
+    # Move the selected piece to a cached legal destination and remove captures.
     def _move(self, row, col):
-        piece = self.selected
-        if piece is None:
+        piece = self.board.get_piece(row, col)
+        if self.selected and piece == 0 and (row, col) in self.valid_moves:
+            self.board.move(self.selected, row, col)
+            skipped = self.valid_moves[(row, col)]
+            if skipped:
+                self.board.remove(skipped)
+            self.change_turn()
+        else:
             return False
 
-        captured = self.valid_moves[(row, col)]
-        old_row = piece.row
-        old_col = piece.col
-        piece.move(row, col)
-        self.board.board[old_row][old_col] = 0
-        self.board.board[row][col] = piece
-        self._remove(captured)
-
-        became_king = not piece.king and (
-            (piece.color == RED and row == 0)
-            or (piece.color == WHITE and row == ROWS - 1)
-        )
-        if became_king:
-            piece.make_king()
-            if piece.color == RED:
-                self.board.red_kings += 1
-            else:
-                self.board.white_kings += 1
-
-        follow_up_captures = {} if became_king else self._captures_for(piece)
-        if captured and follow_up_captures:
-            self.selected = piece
-            self.valid_moves = follow_up_captures
-        else:
-            self.selected = None
-            self.valid_moves = {}
-            self.change_turn()
         return True
 
-    def _captures_for(self, piece):
-        captures = {}
-        for row_delta, col_delta in self._directions(piece):
-            middle_row = piece.row + row_delta
-            middle_col = piece.col + col_delta
-            target_row = piece.row + row_delta * 2
-            target_col = piece.col + col_delta * 2
-            if not self._inside_board(target_row, target_col):
-                continue
+    # Draw a blue marker on each destination in the supplied legal-move map.
+    def draw_valid_moves(self, moves):
+        for move in moves:
+            row, col = move
+            pygame.draw.circle(self.win, BLUE, (col * SQUARE_SIZE + SQUARE_SIZE//2, row * SQUARE_SIZE + SQUARE_SIZE//2), 15)
 
-            middle = self.board.board[middle_row][middle_col]
-            if (middle != 0 and middle.color != piece.color
-                    and self.board.board[target_row][target_col] == 0):
-                captures[(target_row, target_col)] = [middle]
-        return captures
-
-    def _directions(self, piece):
-        directions = []
-        if piece.color == RED or piece.king:
-            directions.extend(((-1, -1), (-1, 1)))
-        if piece.color == WHITE or piece.king:
-            directions.extend(((1, -1), (1, 1)))
-        return directions
-
-    def _has_moves(self, color):
-        for row in self.board.board:
-            for piece in row:
-                if piece != 0 and piece.color == color:
-                    if self._captures_for(piece) or self._simple_moves_for(piece):
-                        return True
-        return False
-
-    def _simple_moves_for(self, piece):
-        for row_delta, col_delta in self._directions(piece):
-            row, col = piece.row + row_delta, piece.col + col_delta
-            if self._inside_board(row, col) and self.board.board[row][col] == 0:
-                return True
-        return False
-
-    def _remove(self, pieces):
-        for piece in pieces:
-            self.board.board[piece.row][piece.col] = 0
-            if piece.color == RED:
-                self.board.red_left -= 1
-                if piece.king:
-                    self.board.red_kings -= 1
-            else:
-                self.board.white_left -= 1
-                if piece.king:
-                    self.board.white_kings -= 1
-
-    @staticmethod
-    def _inside_board(row, col):
-        return 0 <= row < ROWS and 0 <= col < COLS
-
+    # Clear cached moves and switch control to the other player.
     def change_turn(self):
-        self.turn = WHITE if self.turn == RED else RED
+        self.valid_moves = {}
+        if self.turn == RED:
+            self.turn = WHITE
+        else:
+            self.turn = RED
