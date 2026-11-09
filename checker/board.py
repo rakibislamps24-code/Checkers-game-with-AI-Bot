@@ -36,8 +36,11 @@ class Board:
         self.board[piece.row][piece.col], self.board[row][col] = self.board[row][col], self.board[piece.row][piece.col]
         piece.move(row, col)
 
-        # If a piece has reached the far edge, make it a king.
-        if row == ROWS - 1 or row == 0:
+        # Promote only when a regular piece reaches its far edge.
+        if not piece.king and (
+            (piece.color == WHITE and row == ROWS - 1)
+            or (piece.color == RED and row == 0)
+        ):
             piece.make_king()
             if piece.color == WHITE:
                 self.white_kings += 1
@@ -75,18 +78,33 @@ class Board:
     # Remove captured pieces from the grid and update the appropriate piece count.
     def remove(self, pieces):
         for piece in pieces:
+            if piece == 0:
+                continue
+
             self.board[piece.row][piece.col] = 0
-            if piece != 0:
-                if piece.color == RED:
-                    self.red_left -= 1
-                else:
-                    self.white_left -= 1
+            if piece.color == RED:
+                self.red_left -= 1
+                if piece.king:
+                    self.red_kings -= 1
+            else:
+                self.white_left -= 1
+                if piece.king:
+                    self.white_kings -= 1
     
-    # Determine whether either side has run out of pieces.
-    def winner(self):
+    # Determine the winner from piece counts and the current player's mobility.
+    def winner(self, turn=None):
         if self.red_left <= 0:
             return WHITE
         elif self.white_left <= 0:
+            return RED
+
+        if turn == RED and not any(
+            self.get_valid_moves(piece) for piece in self.get_all_pieces(RED)
+        ):
+            return WHITE
+        if turn == WHITE and not any(
+            self.get_valid_moves(piece) for piece in self.get_all_pieces(WHITE)
+        ):
             return RED
         
         return None 

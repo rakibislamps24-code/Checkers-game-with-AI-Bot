@@ -24,7 +24,7 @@ class Game:
 
     # Return the winner reported by the board, or None if play can continue.
     def winner(self):
-        return self.board.winner()
+        return self.board.winner(self.turn)
 
     # Start a fresh game using the same game window.
     def reset(self):
@@ -69,6 +69,7 @@ class Game:
 
     # Clear cached moves and switch control to the other player.
     def change_turn(self):
+        self.selected = None
         self.valid_moves = {}
         if self.turn == RED:
             self.turn = WHITE

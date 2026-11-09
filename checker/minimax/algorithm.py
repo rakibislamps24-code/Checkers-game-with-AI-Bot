@@ -1,12 +1,9 @@
 from copy import deepcopy
-import pygame
-
-
-RED = (255,0,0)
-WHITE = (255, 255, 255)
+from ..constants import RED, WHITE
 #***************Code for minimax***************
 def minimax(position, depth, max_player, game):
-    if depth == 0 or position.winner() != None:#check if depth is 0 or the is the game is over
+    turn = WHITE if max_player else RED
+    if depth == 0 or position.winner(turn) is not None:
         return position.evaluate(), position
 
     if max_player:
@@ -31,6 +28,8 @@ def minimax(position, depth, max_player, game):
         return minEval, best_move
 
     #min player
+
+
 def simulate_move(piece, move, board, game, skip):
     board.move(piece, move[0], move[1])
     if skip:
