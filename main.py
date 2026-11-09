@@ -26,13 +26,15 @@ def main():
     while run:
         clock.tick(FPS)
 
+        winner = game.winner()
+        if winner is not None:
+            print(winner)
+            break
+
+        # *********AI-r turn-e WHITE-r jonno depth-limited Alpha-Beta Minimax chalai.******* 
         if game.turn == WHITE:
             _, new_board = minimax(game.get_board(), DEPTH, True, game)
             game.ai_move(new_board)
-
-        if game.winner() != None:
-            print(game.winner())
-            run = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

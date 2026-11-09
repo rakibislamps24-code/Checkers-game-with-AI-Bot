@@ -1,5 +1,14 @@
 import pygame
-from .constants import BLACK, ROWS, RED, SQUARE_SIZE, COLS, WHITE
+from .constants import (
+    BACKGROUND,
+    DARK_SQUARE,
+    LIGHT_SQUARE,
+    ROWS,
+    RED,
+    SQUARE_SIZE,
+    COLS,
+    WHITE,
+)
 from .piece import Piece
 
 # Store the checkers grid and implement board setup, drawing, and move rules.
@@ -13,13 +22,20 @@ class Board:
     
     # Fill the background and draw the alternating playable squares.
     def draw_squares(self, win):
-        win.fill(BLACK)
+        win.fill(BACKGROUND)
+        square_colors = (LIGHT_SQUARE, DARK_SQUARE)
         for row in range(ROWS):
-            for col in range(row % 2, COLS, 2):
-                pygame.draw.rect(win, RED, (row*SQUARE_SIZE, col *SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            for col in range(COLS):
+                color = square_colors[(row + col) % 2]
+                pygame.draw.rect(
+                    win,
+                    color,
+                    (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE),
+                )
 
     # ***************Calculate and return the heuristic value of the board state.*******************
     def evaluate(self):
+        # *******Piece ar king-er shonkha diye board-er score ber kori; WHITE positive, RED negative.********* 
         return self.white_left - self.red_left + (self.white_kings * 0.5 - self.red_kings * 0.5)
 
     #************************Return all pieces of a given color available on the board.******************

@@ -75,10 +75,11 @@ class Game:
             self.turn = WHITE
         else:
             self.turn = RED
-    #***********************return the current game board**************************************
+    # ******** AI search-er jonno bortoman board-er reference ferot dei.*******
     def get_board(self):
         return self.board
-    #***********************return the current game board after ai move**************************************
+
+    # *********AI-r select kora board boshiye turn-ta human player-er kache ferot dei.******* 
     def ai_move(self, board):
         self.board = board
         self.change_turn()
