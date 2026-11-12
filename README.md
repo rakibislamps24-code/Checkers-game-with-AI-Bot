@@ -1,3 +1,6 @@
+# Play Live on: https://rakibislamps24-code.github.io/Checkers-game-with-AI-Bot/
+
+
 # Checkers with an AI Opponent
 
 A checkers game built with Python and Pygame. Play as the red side against a
